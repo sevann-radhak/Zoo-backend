@@ -1,0 +1,19 @@
+{
+  "name": "zoo-backend",
+  "version": "1.0.0",
+  "description": "API RESTfull Zoo project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sevannr/Zoo-backend.git"
+  },
+  "author": "Sevann Radhakk",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sevannr/Zoo-backend/issues"
+  },
+  "homepage": "https://github.com/sevannr/Zoo-backend#readme"
+}
