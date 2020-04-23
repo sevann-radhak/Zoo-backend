@@ -2,7 +2,6 @@
 
 var jwt = require('jwt-simple');
 var moment = require('moment');
-var secret = 'secret_key_of_sevitanns_jeje'
 
 exports.createToken = function(user) {
     return jwt.encode({
@@ -15,6 +14,6 @@ exports.createToken = function(user) {
             iat: moment().unix(),
             exp: moment().add(30, 'days').unix
         },
-        secret
+        require('./../constants/constants').JWT_SECRET
     );
 };

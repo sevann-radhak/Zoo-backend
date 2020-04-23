@@ -1,7 +1,7 @@
 'use strictt'
 
 // constants
-var constants = require('./../constants/constants');
+const CONSTANTS = require('./../constants/constants');
 // modules
 var bcrypt = require('bcrypt-nodejs');
 // models
@@ -12,9 +12,11 @@ var jwt = require('./../services/jwt');
 
 // actions
 function pruebas(req, res) {
-    res.status(200).send({
-        message: 'Testing user controller and function pruebas'
-    })
+    res.status(200).send(new Response({
+        isSuccess: true,
+        message: 'Testing user controller and function pruebas',
+        result: req.user
+    }));
 }
 
 function login(req, res) {
@@ -25,7 +27,7 @@ function login(req, res) {
         if (err) {
             res.status(500).send(new Response({
                 isSuccess: false,
-                message: constants.BD_ERROR_500
+                message: CONSTANTS.BD_ERROR_500
             }));
         } else {
             user ?
@@ -51,7 +53,7 @@ function login(req, res) {
                 }) :
                 res.status(404).send(new Response({
                     isSuccess: false,
-                    message: constants.BD_ERROR_404
+                    message: CONSTANTS.BD_ERROR_404
                 }));
         }
     });
@@ -73,7 +75,7 @@ function saveUser(req, res) {
                 if (err) {
                     res.status(500).send(new Response({
                         isSuccess: false,
-                        message: constants.BD_ERROR_500
+                        message: CONSTANTS.BD_ERROR_500
                     }));
                 } else {
                     issetUser ?
@@ -86,12 +88,12 @@ function saveUser(req, res) {
                                 ?
                                 res.status(500).send(new Response({
                                     isSuccess: false,
-                                    message: constants.BD_ERROR_500
+                                    message: CONSTANTS.BD_ERROR_500
                                 })) :
                                 !userStored ?
                                 res.status(501).send(new Response({
                                     isSuccess: false,
-                                    message: constants.BD_ERROR_501
+                                    message: CONSTANTS.BD_ERROR_501
                                 })) :
                                 res.status(200).send(new Response({
                                     isSuccess: true,
@@ -104,7 +106,7 @@ function saveUser(req, res) {
     } else {
         res.status(401).send(new Response({
             isSuccess: false,
-            message: constants.MODEL_INVALID
+            message: CONSTANTS.MODEL_INVALID
         }));
     }
 }
