@@ -2,13 +2,13 @@
 
 // constants
 var constants = require('./../constants/constants');
-
 // modules
 var bcrypt = require('bcrypt-nodejs');
-
 // models
 var Response = require('./../models/response')
 var User = require('./../models/user');
+// services
+var jwt = require('./../services/jwt');
 
 // actions
 function pruebas(req, res) {
@@ -30,15 +30,24 @@ function login(req, res) {
         } else {
             user ?
                 bcrypt.compare(password, user.password, (err, check) => {
-                    check ?
-                        res.status(200).send(new Response({
-                            isSuccess: true,
-                            result: user
-                        })) :
+                    if (check) {
+                        if (params.gettoken) {
+                            res.status(200).send(new Response({
+                                isSuccess: true,
+                                result: jwt.createToken(user)
+                            }));
+                        } else {
+                            res.status(200).send(new Response({
+                                isSuccess: true,
+                                result: user
+                            }));
+                        }
+                    } else {
                         res.status(401).send(new Response({
                             isSuccess: true,
                             result: 'User or password incorrect'
                         }));
+                    }
                 }) :
                 res.status(404).send(new Response({
                     isSuccess: false,
