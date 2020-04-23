@@ -60,12 +60,11 @@ function login(req, res) {
 }
 
 
-function saveUser(req, res) {
+function save(req, res) {
     var params = req.body;
 
     if (params.password && params.name && params.email) {
         var user = new User({} = params);
-
 
         bcrypt.hash(params.password, null, null, function(err, hash) {
             user.password = hash;
@@ -111,9 +110,46 @@ function saveUser(req, res) {
     }
 }
 
+function update(req, res) {
+    userId = req.params.id;
+    var update = req.body;
+
+    if (userId != req.user.sub) {
+        res.status(401).send(new Response({
+            isSuccess: false,
+            message: CONSTANTS.BD_ERROR_401
+        }));
+    }
+
+    User.findByIdAndUpdate(userId, update, { new: true }, (err, userUpdate) => {
+        if (err) {
+            res.status(500).send(new Response({
+                isSuccess: false,
+                message: CONSTANTS.BD_ERROR_500
+            }));
+        } else {
+            if (!userUpdate) {
+                res.status(501).send(new Response({
+                    isSuccess: false,
+                    message: CONSTANTS.BD_ERROR_501
+                }));
+            } else {
+                res.status(200).send(new Response({
+                    isSuccess: true,
+                    result: userUpdate
+                }));
+            }
+        }
+    })
+
+
+}
+
+
 // export
 module.exports = {
     pruebas,
     login,
-    saveUser
+    save,
+    update
 };
