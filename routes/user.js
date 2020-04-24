@@ -1,18 +1,22 @@
 'use strict'
 
-var express = require('express');
+var requires = require('./requires');
 var UserController = require('./../controllers/user');
 
-var api = express.Router();
-var md_auth = require('./../middlewares/authenticated');
+// var express = require('express');
 
-var multipart = require('connect-multiparty');
-var md_upload = multipart({ uploadDir: './uploads/users' });
+// var api = requires.express.Router();
+// var md_auth = require('./../middlewares/authenticated');
 
-api.get('/pruebas-user', md_auth.ensureAuth, UserController.pruebas);
-api.post('/login', UserController.login);
-api.post('/create', UserController.save);
-api.put('/update/:id', md_auth.ensureAuth, UserController.update);
-api.post('/uploadImage/:id', [md_auth.ensureAuth, md_upload], UserController.uploadImage);
+// var multipart = require('connect-multiparty');
+// var md_upload = requires.multipart({ uploadDir: './uploads/users' });
 
-module.exports = api;
+// api.get('/pruebas-user', md_auth.ensureAuth, UserController.pruebas);
+requires.api.get('/getImageFile/:imageFile', UserController.getImageFile);
+requires.api.get('/getKeeperes', UserController.getKeepers);
+requires.api.post('/login', UserController.login);
+requires.api.post('/create', UserController.save);
+requires.api.put('/update/:id', requires.md_auth.ensureAuth, UserController.update);
+requires.api.post('/uploadImage/:userId', [requires.md_auth.ensureAuth, requires.md_upload], UserController.uploadImage);
+
+module.exports = requires.api;

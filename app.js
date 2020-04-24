@@ -7,6 +7,7 @@ var app = express();
 
 // charge routes
 var user_routes = require('./routes/user');
+var animal_routes = require('./routes/animal');
 
 // middlewares of body-parser
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -17,11 +18,7 @@ app.use(bodyParser.json());
 
 
 // routes base
-app.use('/api', user_routes);
-
-// app.get('/testing', (req, res) => {
-//     res.status(200).send({ message: 'This is the testing method' })
-// });
-
+app.use('/api/users', user_routes);
+app.use('/api/animals', animal_routes);
 
 module.exports = app;
