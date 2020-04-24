@@ -4,6 +4,7 @@
 const CONSTANTS = require('./../constants/constants');
 // modules
 var bcrypt = require('bcrypt-nodejs');
+var fs = require('fs');
 // models
 var Response = require('./../models/response')
 var User = require('./../models/user');
@@ -140,7 +141,72 @@ function update(req, res) {
                 }));
             }
         }
-    })
+    });
+}
+
+function uploadImage(req, res) {
+    var userId = req.params.id;
+    var fileName = 'Not saved...';
+
+    if (req.files) {
+        var file_path = req.files.image.path;
+        var file_split = file_path.split('\\');
+        var file_name = file_split[2];
+
+        var ext_split = file_name.split('\.');
+        var file_ext = ext_split[1].toLowerCase();
+        console.log(file_ext);
+
+        if (file_ext == 'png' || file_ext == 'jpg' || file_ext == 'jpeg' || file_ext == 'gif') {
+            if (userId != req.user.sub) {
+                res.status(401).send(new Response({
+                    isSuccess: false,
+                    message: CONSTANTS.BD_ERROR_401
+                }));
+            }
+
+            User.findByIdAndUpdate(userId, { image: file_name }, { new: true }, (err, userUpdate) => {
+                if (err) {
+                    res.status(500).send(new Response({
+                        isSuccess: false,
+                        message: CONSTANTS.BD_ERROR_500
+                    }));
+                } else {
+                    if (!userUpdate) {
+                        res.status(501).send(new Response({
+                            isSuccess: false,
+                            message: CONSTANTS.BD_ERROR_501
+                        }));
+                    } else {
+                        res.status(200).send(new Response({
+                            isSuccess: true,
+                            result: { userUpdate, image: file_name }
+                        }));
+                    }
+                }
+            });
+        } else {
+            fs.unlink(file_path, (err) => {
+                if (err) {
+                    res.status(400).send(new Response({
+                        isSuccess: false,
+                        result: `${CONSTANTS.BD_ERROR_400} - extension not valid, file not deleted.`
+                    }));
+                } else {
+                    res.status(400).send(new Response({
+                        isSuccess: false,
+                        result: `${CONSTANTS.BD_ERROR_400} - extension not valid.`
+                    }));
+                }
+            });
+        }
+    } else {
+        res.status(400).send(new Response({
+            isSuccess: true,
+            result: CONSTANTS.BD_ERROR_400
+        }));
+    }
+
 
 
 }
@@ -151,5 +217,6 @@ module.exports = {
     pruebas,
     login,
     save,
-    update
+    update,
+    uploadImage
 };
