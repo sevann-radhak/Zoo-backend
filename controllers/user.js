@@ -1,65 +1,27 @@
 'use strictt'
 
 var requires = require('./requires');
+var responses = require('./responses');
 var User = require('./../models/user');
-
-// // constants
-// const CONSTANTS = require('./../constants/constants');
-// // modules
-// var bcrypt = require('bcrypt-nodejs');
-// var fs = require('fs');
-// var path = require('path');
-// // models
-// var Response = require('./../models/response')
-// services
-// var jwt = require('./../services/jwt');
-
-
-// // actions
-// function pruebas(req, res) {
-//     res.status(200).send(new Response({
-//         isSuccess: true,
-//         message: 'Testing user controller and function pruebas',
-//         result: req.user
-//     }));
-// }
 
 function getImageFile(req, res) {
     var { imageFile } = req.params;
     var path_file = `./uploads/users/${imageFile}`;
 
     requires.fs.exists(path_file, function(exists) {
-        if (exists) {
-            res.sendFile(path.resolve(path_file));
-        } else {
-            res.status(404).send(new requires.Response({
-                isSuccess: false,
-                result: requires.CONSTANTS.BD_ERROR_404
-            }));
-        }
+        exists ?
+            res.sendFile(requires.path.resolve(path_file)) :
+            responses.response(res, 404);
     });
 }
 
 function getKeepers(req, res) {
-    User.find({ role: 'ROLE_ADMIN' }).exec((err, users) => {
-        if (err) {
-            res.status(500).send(new requires.Response({
-                isSuccess: false,
-                message: requires.CONSTANTS.BD_ERROR_500
-            }));
-        } else {
-            if (!users) {
-                res.status(404).send(new requires.Response({
-                    isSuccess: false,
-                    message: requires.CONSTANTS.BD_ERROR_404
-                }));
-            } else {
-                res.status(200).send(new requires.Response({
-                    isSuccess: true,
-                    result: users
-                }));
-            }
-        }
+    User.find({ role: requires.CONSTANTS.ROLE_ADMIN }).exec((err, users) => {
+        err ?
+            responses.response(res, 500) :
+            !users ?
+            responses.response(res, 404) :
+            responses.response(res, 200, users);
     });
 }
 
@@ -67,42 +29,29 @@ function login(req, res) {
     var params = req.body;
     var { email, password } = params;
 
-    User.findOne({ email: email.toLowerCase() }, (err, user) => {
-        if (err) {
-            res.status(500).send(new requires.Response({
-                isSuccess: false,
-                message: requires.CONSTANTS.BD_ERROR_500
-            }));
-        } else {
-            user ?
-                requires.bcrypt.compare(password, user.password, (err, check) => {
-                    if (check) {
-                        if (params.gettoken) {
-                            res.status(200).send(new requires.Response({
+    if (email && password) {
+        User.findOne({ email: email.toLowerCase() }, (err, user) => {
+            if (err) {
+                responses.response(res, 500);
+            } else {
+                user ?
+                    requires.bcrypt.compare(password, user.password, (err, check) => {
+                        check ?
+                            params.gettoken ?
+                            responses.response(res, 200, requires.jwt.createToken(user)) :
+                            responses.response(res, 200, user) :
+                            res.status(400).send(new requires.Response({
                                 isSuccess: true,
-                                result: requires.jwt.createToken(user)
+                                result: 'User or password incorrect'
                             }));
-                        } else {
-                            res.status(200).send(new requires.Response({
-                                isSuccess: true,
-                                result: user
-                            }));
-                        }
-                    } else {
-                        res.status(401).send(new requires.Response({
-                            isSuccess: true,
-                            result: 'User or password incorrect'
-                        }));
-                    }
-                }) :
-                res.status(404).send(new requires.Response({
-                    isSuccess: false,
-                    message: requires.CONSTANTS.BD_ERROR_404
-                }));
-        }
-    });
+                    }) :
+                    responses.response(res, 404);
+            }
+        });
+    } else {
+        responses.response(res, 400);
+    }
 }
-
 
 function save(req, res) {
     var params = req.body;
@@ -116,40 +65,25 @@ function save(req, res) {
 
             User.findOne({ email: user.email }, (err, issetUser) => {
                 if (err) {
-                    res.status(500).send(new requires.Response({
-                        isSuccess: false,
-                        message: requires.CONSTANTS.BD_ERROR_500
-                    }));
+                    responses.response(res, 500);
                 } else {
                     issetUser ?
-                        res.status(401).send(new requires.Response({
+                        res.status(501).send(new requires.Response({
                             isSuccess: false,
                             message: 'This user already exists in DB'
                         })) :
                         user.save((err, userStored) => {
                             err ?
-                                res.status(500).send(new requires.Response({
-                                    isSuccess: false,
-                                    message: requires.CONSTANTS.BD_ERROR_500
-                                })) :
+                                responses.response(res, 500) :
                                 !userStored ?
-                                res.status(501).send(new requires.Response({
-                                    isSuccess: false,
-                                    message: requires.CONSTANTS.BD_ERROR_501
-                                })) :
-                                res.status(200).send(new requires.Response({
-                                    isSuccess: true,
-                                    result: userStored
-                                }));
+                                responses.response(res, 501) :
+                                responses.response(res, 200, userStored);
                         });
                 }
             });
         });
     } else {
-        res.status(401).send(new requires.Response({
-            isSuccess: false,
-            message: requires.CONSTANTS.MODEL_INVALID
-        }));
+        responses.response(res, 400);
     }
 }
 
@@ -158,37 +92,20 @@ function update(req, res) {
     var update = req.body;
 
     if (userId != req.user.sub) {
-        res.status(401).send(new requires.Response({
-            isSuccess: false,
-            message: requires.CONSTANTS.BD_ERROR_401
-        }));
+        responses.response(res, 401);
+    } else {
+        User.findByIdAndUpdate(userId, update, { new: true }, (err, userUpdated) => {
+            err ?
+                responses.response(res, 500) :
+                !userUpdated ?
+                responses.response(res, 501) :
+                responses.response(res, 200, userUpdated);
+        });
     }
-
-    User.findByIdAndUpdate(userId, update, { new: true }, (err, userUpdate) => {
-        if (err) {
-            res.status(500).send(new requires.Response({
-                isSuccess: false,
-                message: requires.CONSTANTS.BD_ERROR_500
-            }));
-        } else {
-            if (!userUpdate) {
-                res.status(501).send(new requires.Response({
-                    isSuccess: false,
-                    message: requires.CONSTANTS.BD_ERROR_501
-                }));
-            } else {
-                res.status(200).send(new requires.Response({
-                    isSuccess: true,
-                    result: userUpdate
-                }));
-            }
-        }
-    });
 }
 
 function uploadImage(req, res) {
     var { userId } = req.params;
-    // var fileName = 'Not saved...';
 
     if (req.files) {
         var file_path = req.files.image.path;
@@ -199,56 +116,34 @@ function uploadImage(req, res) {
         var file_ext = ext_split[1].toLowerCase();
 
         if (file_ext == 'png' || file_ext == 'jpg' || file_ext == 'jpeg' || file_ext == 'gif') {
-            if (userId != req.user.sub) {
-                res.status(401).send(new requires.Response({
-                    isSuccess: false,
-                    message: requires.CONSTANTS.BD_ERROR_401
-                }));
-            }
-
-            User.findByIdAndUpdate(userId, { image: file_name }, { new: true }, (err, userUpdate) => {
-                if (err) {
-                    res.status(500).send(new requires.Response({
-                        isSuccess: false,
-                        message: requires.CONSTANTS.BD_ERROR_500
-                    }));
-                } else {
-                    if (!userUpdate) {
-                        res.status(501).send(new requires.Response({
-                            isSuccess: false,
-                            message: requires.CONSTANTS.BD_ERROR_501
-                        }));
-                    } else {
-                        res.status(200).send(new requires.Response({
-                            isSuccess: true,
-                            result: { userUpdate, image: file_name }
-                        }));
-                    }
-                }
-            });
+            userId != req.user.sub ?
+                responses.response(res, 401) :
+                User.findByIdAndUpdate(userId, { image: file_name }, { new: true }, (err, userUpdate) => {
+                    err ?
+                        responses.response(res, 500) :
+                        !userUpdate ?
+                        responses.response(res, 501) :
+                        responses.response(res, 200, { userUpdate, image: file_name });
+                });
         } else {
             fs.unlink(file_path, (err) => {
                 if (err) {
                     res.status(400).send(new requires.Response({
                         isSuccess: false,
-                        result: `${requires.CONSTANTS.BD_ERROR_400} - extension not valid, file not deleted.`
+                        message: `${requires.CONSTANTS.BD_ERROR_400} - extension not valid, file not deleted.`
                     }));
                 } else {
                     res.status(400).send(new requires.Response({
                         isSuccess: false,
-                        result: `${requires.CONSTANTS.BD_ERROR_400} - extension not valid.`
+                        message: `${requires.CONSTANTS.BD_ERROR_400} - extension not valid.`
                     }));
                 }
             });
         }
     } else {
-        res.status(400).send(new requires.Response({
-            isSuccess: false,
-            result: requires.CONSTANTS.BD_ERROR_400
-        }));
+        responses.response(res, 400);
     }
 }
-
 
 // export
 module.exports = {

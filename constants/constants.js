@@ -9,7 +9,7 @@ const BD_ERROR_404 = 'Error 404: Record not found';
 const BD_ERROR_500 = 'Error 500: Internal error in Data Base';
 const BD_ERROR_501 = 'Error 501: Record not saved in Data Base';
 
-const MODEL_INVALID = 'Data sent is invalid'
+const ROLE_ADMIN = 'ROLE_ADMIN';
 
 module.exports = {
     BD_ERROR_400,
@@ -19,5 +19,5 @@ module.exports = {
     BD_ERROR_500,
     BD_ERROR_501,
     JWT_SECRET,
-    MODEL_INVALID
+    ROLE_ADMIN
 };
