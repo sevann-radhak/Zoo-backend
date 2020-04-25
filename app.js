@@ -19,6 +19,6 @@ app.use(bodyParser.json());
 
 // routes base
 app.use('/api/users', user_routes);
-app.use('/api/animals', animal_routes);
+app.use('/api', animal_routes);
 
 module.exports = app;
