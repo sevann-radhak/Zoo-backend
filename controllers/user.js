@@ -36,13 +36,14 @@ function login(req, res) {
             } else {
                 user ?
                     requires.bcrypt.compare(password, user.password, (err, check) => {
+                        user.password = '';
                         check ?
                             params.gettoken ?
                             responses.response(res, 200, requires.jwt.createToken(user)) :
                             responses.response(res, 200, user) :
                             res.status(400).send(new requires.Response({
-                                isSuccess: true,
-                                result: 'User or password incorrect'
+                                isSuccess: false,
+                                message: 'User or password incorrect'
                             }));
                     }) :
                     responses.response(res, 404);
